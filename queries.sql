@@ -59,46 +59,55 @@ HAVING order_city IS NOT NULL  --Filtering out guests
 ORDER BY SUM(sales) DESC
 LIMIT 5;
 
--- Which product got more returns?
-SELECT p.description as product, SUM(ROUND(sales::numeric,2)) as sales_returns
-FROM SALES s JOIN PRODUCTS p USING (stock_code)
-GROUP BY p.description, quantity
-HAVING quantity <= 0
-ORDER BY SUM(sales)
-LIMIT 5;
-
---TEMP
-SELECT p.description as product, quantity, s.unit_price, sales, s.customer_id
-FROM SALES s JOIN PRODUCTS p USING (stock_code)
-WHERE quantity < 0 AND p.description = 'Dog and Puppy Pads'
-ORDER BY p.description
-
+-- Which products got more returns?
 SELECT DISTINCT(p.description), 
 SUM(ROUND(sales::numeric,2)) OVER (PARTITION BY p.description) as sales_returns
 FROM SALES s JOIN PRODUCTS p USING (stock_code)
-WHERE quantity <= 0
+WHERE invoice_no = 'return'
 ORDER BY sales_returns
 LIMIT 5;
 
---TEMP
-SELECT p.description, quantity, unit_price, sales, s.customer_id,
-SUM(ROUND(sales::numeric,2)) OVER (PARTITION BY p.description) as sales_returns
-FROM SALES s JOIN PRODUCTS p USING (stock_code)
-WHERE quantity < 0 AND p.description = 'Dog and Puppy Pads'
-ORDER BY sales_returns
 
+-- Which days of the month generate more sales?
+SELECT day, SUM(sales::numeric) as sales
+FROM sales
+GROUP BY day
+ORDER BY SUM(sales) DESC
+LIMIT 5;
 
--- Which days generate more revenue?
+-- Which days of the month generate less sales?
+SELECT day, SUM(sales::numeric) as sales
+FROM sales
+GROUP BY day
+ORDER BY SUM(sales)
+LIMIT 5;
 
+-- Which days of the week generate more sales?
+SELECT day_of_week, SUM(sales::numeric) as sales
+FROM sales
+GROUP BY day_of_week
+ORDER BY SUM(sales) DESC
 
+-- Which months generate more sales?
+SELECT month, SUM(sales::numeric) as sales
+FROM sales
+GROUP BY month
+ORDER BY SUM(sales) DESC
 
+-- Top 5 highest shipping cost products?
+SELECT description as product, weight, shipping_cost_1000_mile
+FROM products 
+ORDER BY shipping_cost_1000_mile DESC
+LIMIT 5;
+
+-- Correlation between product weight and shipping cost?
+SELECT round(corr(weight, shipping_cost_1000_mile)::numeric,2) as weight_shipping_corr
+FROM products 
 
 
 --********************************--
 -- QUERY to see data types --
-SELECT data_type
+SELECT column_name, data_type
 FROM information_schema.columns
 WHERE table_name = 'sales'
-AND column_name = 'sales';
---sales is double precision
 --********************************--

@@ -104,10 +104,65 @@ LIMIT 5;
 SELECT round(corr(weight, shipping_cost_1000_mile)::numeric,2) as weight_shipping_corr
 FROM products 
 
+-- Product association and confidence of buying product 1 given customer bought product 2
+-- https://medium.com/@samratjain/explained-market-basket-analysis-using-sql-a7434f30e649
+WITH product_association AS
+(	
+	SELECT product_1, product_2, COUNT(transaction) as transaction_count 
+	FROM
+	(
+		SELECT s1.invoice_no as transaction, s1.description as product_1, s2.description as product_2, s2.invoice_no
+		FROM sales s1, sales s2
+		WHERE s1.invoice_no = s2.invoice_no
+		AND s1.description <> s2.description
+		AND s1.description < s2.description
+		ORDER BY s1.description
+	) as temp
+	GROUP BY product_1, product_2
+ ),
+ transactions_per_product AS
+ (
+ 	SELECT description as product, COUNT(*) as no_of_transactions
+	FROM sales
+	GROUP BY description
+ )
+ SELECT product_1, product_2,
+ round(transaction_count/no_of_transactions::numeric,2) AS conf_p1_given_p2 -- conf(p1->p2) = support of p1 and p2/support of p2
+ FROM product_association pa, transactions_per_product tp
+ WHERE pa.product_2 = tp.product
+ ORDER BY conf_p1_given_p2 DESC
 
---********************************--
+
+-- Product association and confidence of buying product 2 given customer bought product 1
+WITH product_association AS
+(	
+	SELECT product_1, product_2, COUNT(transaction) as transaction_count 
+	FROM
+	(
+		SELECT s1.invoice_no as transaction, s1.description as product_1, s2.description as product_2, s2.invoice_no
+		FROM sales s1, sales s2
+		WHERE s1.invoice_no = s2.invoice_no
+		AND s1.description <> s2.description
+		AND s1.description < s2.description
+		ORDER BY s1.description
+	) as temp
+	GROUP BY product_1, product_2
+ ),
+ transactions_per_product AS
+ (
+ 	SELECT description as product, COUNT(*) as no_of_transactions
+	FROM sales
+	GROUP BY description
+ )
+ SELECT product_1, product_2,
+ round(transaction_count/no_of_transactions::numeric,2) AS conf_p2_given_p1 -- conf(p2->p1) = support of p1 and p2/support of p1
+ FROM product_association pa, transactions_per_product tp
+ WHERE pa.product_1 = tp.product
+ ORDER BY conf_p2_given_p1 DESC
+
+--**********************************************************--
 -- QUERY to see data types --
 SELECT column_name, data_type
 FROM information_schema.columns
 WHERE table_name = 'sales'
---********************************--
+--**********************************************************--

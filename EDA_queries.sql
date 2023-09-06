@@ -1,11 +1,3 @@
--- MAIN JOIN
---If we don't use LEFT on customers, the number of records goes down to 20,649
---since we have 4,416 customers as guests and we don't have information on them
-SELECT COUNT(*) FROM sales s
-JOIN products p USING (stock_code)
-LEFT JOIN customers c USING (customer_id)
---25065
-
 -- Total number of sales
 SELECT COUNT(*) FROM sales
 --25065

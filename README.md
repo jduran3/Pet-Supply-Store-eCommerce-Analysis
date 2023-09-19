@@ -11,3 +11,6 @@
 
 **EDA_queries.sql**
 <br>SQL script with the queries we ran in the analysis
+
+**EDA queries results.pdf**
+<br>Results captured from running the SQL queries
